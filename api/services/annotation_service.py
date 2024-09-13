@@ -444,3 +444,21 @@ class AppAnnotationService:
                 "embedding_model_name": collection_binding_detail.model_name,
             },
         }
+
+
+    @staticmethod
+    def get_all_annotations(page: int, limit: int, keyword: str = None):  ## 用于获取所有应用的annotation
+        query = db.session.query(MessageAnnotation)
+        
+        if keyword:
+            query = query.filter(
+                or_(
+                    MessageAnnotation.question.ilike(f"%{keyword}%"),
+                    MessageAnnotation.content.ilike(f"%{keyword}%")
+                )
+            )
+        
+        total = query.count()
+        annotations = query.order_by(MessageAnnotation.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+        
+        return annotations, total

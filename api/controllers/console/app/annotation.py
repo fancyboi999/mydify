@@ -256,7 +256,30 @@ class AnnotationHitHistoryListApi(Resource):
             "page": page,
         }
         return response
+    
+class AllAnnotationsListApi(Resource):  ## 用于查询所有app的annotation
+    @setup_required
+    @login_required
+    @account_initialization_required
+    def get(self):
+        if not current_user.is_editor:
+            raise Forbidden()
 
+        page = request.args.get("page", default=1, type=int)
+        limit = request.args.get("limit", default=20, type=int)
+        keyword = request.args.get("keyword", default=None, type=str)
+
+        annotation_list, total = AppAnnotationService.get_all_annotations(page, limit, keyword)
+        response = {
+            "data": marshal(annotation_list, annotation_fields),
+            "has_more": len(annotation_list) == limit,
+            "limit": limit,
+            "total": total,
+            "page": page,
+        }
+        return response, 200
+
+api.add_resource(AllAnnotationsListApi, "/apps/annotations-all-apps")
 
 api.add_resource(AnnotationReplyActionApi, "/apps/<uuid:app_id>/annotation-reply/<string:action>")
 api.add_resource(
